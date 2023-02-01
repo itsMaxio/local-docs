@@ -1,26 +1,29 @@
-- hosts: local
-  become: true
-  become_method: sudo
-  become_user: root
+- hosts: all
+  gather_facts: yes
+  become: yes
+
   tasks:
-    - name: Update apt repo and cache on Ubuntu
-      apt: update_cache=yes  cache_valid_time=3600 #force_apt_get=yes
+    - name: Perform a dist-upgrade.
+      ansible.builtin.apt:
+        upgrade: full
+        update_cache: yes
+        state: latest
 
-    - name: Upgrade all packages on servers
-      become: true
-      become_method: sudo
-      apt: upgrade=dist #force_apt_get=yes
+    - name: Upgrade all packages.
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
 
-    - name: Check if a reboot is needed on all servers
+    - name: Check if a reboot is required.
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+        get_md5: no
       register: reboot_required_file
-      stat: path=/var/run/reboot-required get_md5=no
 
-    - name: Reboot the box if kernel updated
-      reboot:
-        msg: "Reboot initiated by Ansible for kernel updates"
-        connect_timeout: 5
-        reboot_timeout: 300
-        pre_reboot_delay: 0
-        post_reboot_delay: 30
-        test_command: uptime
-      when: reboot_required_file.stat.exists
+    - name: Reboot the server (if required).
+      ansible.builtin.reboot:
+      when: reboot_required_file.stat.exists == true
+
+    - name: Remove dependencies that are no longer required.
+      ansible.builtin.apt:
+        autoremove: yes
