@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  ansible:
+    build:
+      context: .
+    container_name: ansible
+    volumes:
+      - "../../ansible:/ansible"
+    stdin_open: true
+    tty: true
