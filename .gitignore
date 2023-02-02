@@ -1,2 +1,4 @@
 *.retry
+**/private*
 **/inventory*
+**/vars*

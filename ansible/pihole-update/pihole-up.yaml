@@ -1,0 +1,26 @@
+- hosts: all
+  gather_facts: yes
+  become: yes
+  vars_files:
+    - ../private/vars.yaml
+
+  tasks:
+    - name: PiHole update command.
+      ansible.builtin.shell:
+        cmd: pihole -up
+      register: pihole_update_status
+      
+    - name: Replace port number in lighttpd.conf.
+      ansible.builtin.replace:
+        path: /etc/lighttpd/lighttpd.conf
+        regexp: 'server.port\s*=\s*{{ pihole.old_port }}'
+        replace: 'server.port={{ pihole.new_port }}'
+        
+    - name: Restart lighttpd.service.
+      ansible.builtin.service:
+        name: lighttpd.service
+        state: restarted
+
+    - name: Print PiHole output.
+      debug:
+        msg: "{{ pihole_update_status.stdout_lines }}"
