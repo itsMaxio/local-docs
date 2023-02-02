@@ -13,7 +13,7 @@
     - name: Replace port number in lighttpd.conf.
       ansible.builtin.replace:
         path: /etc/lighttpd/lighttpd.conf
-        regexp: 'server.port\s*=\s*{{ pihole.old_port }}'
+        regexp: 'server.port.*=.*80.*'
         replace: 'server.port={{ pihole.new_port }}'
         
     - name: Restart lighttpd.service.
