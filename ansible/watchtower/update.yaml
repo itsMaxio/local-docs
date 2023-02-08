@@ -1,0 +1,37 @@
+- hosts: all
+  gather_facts: false
+  become: yes
+  vars:
+    file_src: "../private/vars.yaml"
+
+  tasks:
+    - name: Import variables from file if exists
+      ansible.builtin.include_vars:
+        file: "{{ file_src }}"
+      with_first_found:
+        - files:
+            - "{{ file_src }}"
+          skip: true
+
+    - name: Install Docker SDK for Python
+      pip:
+        name: "docker" 
+
+    - name: Start Watchtower update
+      docker_container:
+        name: "{{ watchtower.name }}"
+        image: containrrr/watchtower
+        state: started
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock 
+        env:
+          WATCHTOWER_RUN_ONCE: "true"
+      register: watchtower_status
+    
+    - name: Wait unltil Watchtower stops
+      docker_container_info:
+        name: "{{ watchtower.name }}"
+      register: result
+      until: result.container.State.Status == "exited"
+      retries: 100
+      delay: 5

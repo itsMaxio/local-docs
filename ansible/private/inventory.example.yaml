@@ -1,0 +1,8 @@
+all:
+  hosts:
+    host_name:
+      ansible_host: ip
+      ansible_connection: ssh
+      ansible_user: maxio
+      ansible_password: password
+      ansible_become_password: sudopassword

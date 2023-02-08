@@ -1,5 +1,8 @@
 *.retry
-**/private*
+**/private/*
 **/inventory*
 **/vars*
 **/tmp*
+
+!**/private/*.md
+!**/*.example.yaml
