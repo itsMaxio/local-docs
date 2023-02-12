@@ -25,8 +25,8 @@
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock 
         env:
-          WATCHTOWER_RUN_ONCE: true
-          WATCHTOWER_NO_STARTUP_MESSAGE: true
+          WATCHTOWER_RUN_ONCE: "true"
+          WATCHTOWER_NO_STARTUP_MESSAGE: "true"
           WATCHTOWER_NOTIFICATIONS: "gotify"
           WATCHTOWER_NOTIFICATION_GOTIFY_URL: "{{ watchtower.gotify_ip }}"
           WATCHTOWER_NOTIFICATION_GOTIFY_TOKEN: "{{ watchtower.gotify_token }}"
