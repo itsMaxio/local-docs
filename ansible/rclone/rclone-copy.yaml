@@ -1,0 +1,30 @@
+- hosts: all
+  gather_facts: false
+  become: false
+
+  tasks:
+    - name: Import variables from file if exists.
+      ansible.builtin.include_vars:
+        file: ../private/vars.yaml
+      with_first_found:
+        - files:
+            - ../private/vars.yaml
+          skip: true
+
+    - name: Install Docker SDK for Python
+      pip:
+        name: "docker" 
+
+    - name: Rclone Copy
+      docker_container:
+        name: "{{ rclone.name }}"
+        image: rclone/rclone:latest
+        auto_remove: true
+        env:
+          PHP_TZ: "Europe/Warsaw"
+          PUID: "{{ rclone.puid }}"
+          PGID: "{{ rclone.pgid }}"
+        volumes:
+          - "{{ rclone.config_dir }}:/config/rclone"
+          - "{{ rclone.copy_dir }}:/copy"
+        command: --progress --log-level=DEBUG --stats=1m --transfers=1 copy /copy {{ rclone.remote }}:{{ rclone.drive_dir }}

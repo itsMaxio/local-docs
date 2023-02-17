@@ -1,4 +1,4 @@
-- hosts: docker
+- hosts: all
   gather_facts: false
   become: yes
   vars:

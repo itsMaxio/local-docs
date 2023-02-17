@@ -1,12 +1,12 @@
 - hosts: all
-  gather_facts: yes
-  become: yes
+  gather_facts: false
+  become: true
 
   tasks:
     - name: Perform a dist-upgrade.
       ansible.builtin.apt:
         update_cache: yes
-        upgrade: yes
+        upgrade: dist
 
     - name: Upgrade all packages.
       ansible.builtin.apt:
@@ -16,13 +16,20 @@
     - name: Remove dependencies that are no longer required.
       ansible.builtin.apt:
         autoremove: yes
+        autoclean : yes
 
     - name: Check if a reboot is required.
       ansible.builtin.stat:
         path: /var/run/reboot-required
-        get_md5: no
+        get_md5: false
       register: reboot_required_file
 
-    - name: Reboot the server (if required).
-      ansible.builtin.reboot:
+    - name: Ask if you want to restart.
+      ansible.builtin.pause:
+        prompt: "Reboot system? (type 'y')"
+      register: prompt
       when: reboot_required_file.stat.exists == true
+
+    - name: Reboot the server.
+      ansible.builtin.reboot:
+      when: reboot_required_file.stat.exists == true and prompt.user_input == "y" 

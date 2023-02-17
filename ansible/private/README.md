@@ -41,5 +41,4 @@ cp vars.example.yaml vars.yaml
 Edit variables in `vars.yaml` file:
 > for every  `new var` see individual file:
 
-* [Watchtower variables](../watchtower/README.md)
-* [PiHole variables](../pihole-update/README.md)
+[List of possible configurations](../README.md)
