@@ -2,7 +2,7 @@
 
 Simple Tailscale configuration with internal LAN access and DNS (PiHole, NPM).
 
-# Before start
+## Before start
 
 Steps before running
 
@@ -10,7 +10,7 @@ Steps before running
 2. Change `volume` location to correct
 3. Go to [admin console](https://login.tailscale.com/admin/settings/keys) in Tailscale and generate auth key
 
-# First run
+## First run
 
 First run steps
 
@@ -26,7 +26,7 @@ sudo docker exec tailscale tailscale up --auth-key=<PUT YOUR AUTH KEY HERE>
 
 3. Disable `key expire` in `Admin Console`
 
-# How to setup LAN
+## How to setup LAN
 
 To configure LAN access you have to enable subnet in container via command or `Exec Console` (ash) inside Portainer (copy without `sudo docker exec tailscale`)
 
@@ -36,7 +36,7 @@ sudo docker exec tailscale tailscale up --accept-dns=false --advertise-routes=19
 
 then click on the 3 dots next to your machine settings in `Admin Console` and `Edit route settings` and enable your Subnet
 
-# How to setup DNS
+## How to setup DNS
 
 Copy the `tailscale` ip address in your `Machines` tab then go to `DNS` settings in `Admin Console` and create custom `Nameservers` with the address you copied then click `Override local DNS` and you are done
 
