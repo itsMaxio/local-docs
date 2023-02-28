@@ -32,7 +32,7 @@
           WATCHTOWER_NOTIFICATION_GOTIFY_TOKEN: "{{ watchtower.gotify_token }}"
       register: watchtower_status
     
-    - name: Wait unltil Watchtower stops
+    - name: Wait until Watchtower stops
       docker_container_info:
         name: "{{ watchtower.name }}"
       register: result
