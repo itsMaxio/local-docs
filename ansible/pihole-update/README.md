@@ -1,7 +1,6 @@
 # Variable config spreadsheet for Pihole Update
 
 ## Before start 
-Make sure that `file_src` in `update.yaml` is set up correctly
 
 Add variables to `vars.yaml` file:
 
@@ -25,5 +24,5 @@ cd ansible
 Run it
 
 ```bash
-ansible-playbook -i private/inventory.yaml pihole-update/main.yaml
+ansible-playbook -kK -i 0_config/inventory.yaml -e @0_config/vars.yaml pihole-update/main.yaml
 ```

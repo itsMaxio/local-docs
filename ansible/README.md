@@ -10,10 +10,10 @@ To run this project, you will need to create two `.yaml` files:
 
 ### Inventory file
 
-Move to the `private` directory:
+Move to the `0_config` directory:
 
 ```bash
-cd private
+cd 0_config
 ```
 
 Copy `inventory.example.yaml` file:
@@ -44,9 +44,9 @@ cp vars.example.yaml vars.yaml
 ```
 
 Edit variables in `vars.yaml` file:
-> for every  `new var` see individual file:
+> for every `new var` see individual file:
 
-List of possible configurations
+List of possible configurations:
 
 - [Apt Update](apt-update/README.md)
 - [Watchtower](watchtower/README.md)

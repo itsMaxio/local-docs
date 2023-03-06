@@ -1,9 +1,9 @@
 *.retry
-**/private/*
+**/0_config/*
 **/inventory*
 **/vars*
 **/tmp*
 **/docker-compose/**/docker-compose.yaml
 
-!**/private/*.md
+!**/0_config/*.md
 !**/*.example.yaml

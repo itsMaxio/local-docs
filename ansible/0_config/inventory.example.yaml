@@ -1,0 +1,6 @@
+all:
+  hosts:
+    host_name: #custom hostname
+      ansible_host: ip
+      ansible_connection: ssh
+      ansible_user: maxio

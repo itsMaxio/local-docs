@@ -3,14 +3,6 @@
   become: yes
 
   tasks:
-    - name: Import variables from file if exists.
-      ansible.builtin.include_vars:
-        file: ../private/vars.yaml
-      with_first_found:
-        - files:
-            - ../private/vars.yaml
-          skip: true
-
     - name: PiHole update command.
       ansible.builtin.shell:
         cmd: pihole -up
