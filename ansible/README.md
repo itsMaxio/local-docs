@@ -16,10 +16,10 @@ Move to the `0_config` directory:
 cd 0_config
 ```
 
-Copy `inventory.example.yaml` file:
+Copy `example.inventory.yaml` file:
 
 ```bash
-cp inventory.example.yaml inventory.yaml
+cp example.inventory.yaml inventory.yaml
 ```
 
 Edit variables in `inventory.yaml` file:
@@ -37,10 +37,10 @@ all:
 
 ### Vars file
 
-Copy `inventory.example.yaml` file:
+Copy `example.inventory.yaml` file:
 
 ```bash
-cp vars.example.yaml vars.yaml
+cp example.vars.yaml vars.yaml
 ```
 
 Edit variables in `vars.yaml` file:

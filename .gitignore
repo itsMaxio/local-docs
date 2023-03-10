@@ -6,4 +6,4 @@
 **/docker-compose/**/docker-compose.yaml
 
 !**/0_config/*.md
-!**/*.example.yaml
+!**/example*.yaml
