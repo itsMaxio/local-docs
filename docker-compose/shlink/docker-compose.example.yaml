@@ -1,0 +1,44 @@
+version: "3"
+
+services:
+  shlink-server:
+    image: shlinkio/shlink:stable
+    container_name: shlink-server
+    restart: always
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    environment:
+      - TZ="Europe/Warsaw"
+      #- DEFAULT_DOMAIN=<URL>
+      - IS_HTTPS_ENABLED=true
+      - GEOLITE_LICENSE_KEY=<KEY>
+      - ANONYMIZE_REMOTE_ADDR=false
+      - DB_DRIVER=mysql
+      - DB_USER=shlink
+      - DB_NAME=shlink
+      - DB_PASSWORD=<MYSQL-PASSWORD>
+      - DB_HOST=<MYSQL-IP>:<MYSQL-PORT>
+    ports:
+      - <PORT>:8080
+    #api key console: api-key:generate
+    
+  shlink:
+    image: shlinkio/shlink-web-client:stable
+    container_name: shlink
+    restart: always
+    #volumes:
+    #  - <PATH-TO-CONFIG>:/usr/share/nginx/html/servers.json
+    depends_on:
+      - shlink-server
+    ports:
+      - <PORT>:80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.shlink.loadBalancer.server.port=80"
+      #- "traefik.http.routers.shlink.rule=Host(`<URL>`)"
+      - "traefik.http.routers.shlink.entrypoints=https"
+      - "traefik.http.routers.shlink.tls=true"
+      
+networks:
+  default:
+    name: traefik

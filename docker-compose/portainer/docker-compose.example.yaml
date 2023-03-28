@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    environment:
+      - SSL_IGNORE_CERTIFICATION_CHECK=true
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./portainer-data:/data
+    ports:
+      - <PORT>:9443
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.portainer.loadBalancer.server.port=9443"
+      - "traefik.http.services.portainer.loadbalancer.server.scheme=https"
+      #- "traefik.http.routers.<NAME>.rule=Host(`<URL>`)"
+      - "traefik.http.routers.portainer.entrypoints=https"
+      - "traefik.http.routers.portainer.tls=true"
+      
+networks:
+  default:
+    name: traefik

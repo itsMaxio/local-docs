@@ -1,0 +1,23 @@
+version: "3"
+services:
+  upsnap:
+    image: ghcr.io/seriousm4x/upsnap:3
+    container_name: upsnap
+    network_mode: host
+    #ports:
+   #   - <PORT>:8090
+    restart: unless-stopped
+    volumes:
+      - <PATH-TO-CONFIG>:/app/pb_data
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8090/api/health || exit 1
+      interval: 1m
+      timeout: 10s
+      retries: 3
+    environment:
+       - TZ=Europe/Warsaw # Set container timezone for cron schedules
+       - UPSNAP_INTERVAL=@every 10s # Sets the interval in which the devices are pinged
+       - UPSNAP_SCAN_RANGE=<IP>/<MASK> # Scan range is used for device discovery on local network
+       - UPSNAP_WEBSITE_TITLE=UpSnap Maxio # Custom website title
+    # # you can change the listen ip:port inside the container or install custom packages for shutdown via a custom entrypoint
+    # entrypoint: /bin/sh -c "apk update && apk add --no-cache ipmitool && rm -rf /var/cache/apk/* && ./upsnap serve --http 0.0.0.0:8090"

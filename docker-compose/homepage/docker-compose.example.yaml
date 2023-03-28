@@ -1,0 +1,23 @@
+version: "3.3"
+
+services:
+  homepage:
+    image: ghcr.io/benphelps/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    ports:
+      - <PORT>:3000
+    volumes:
+      - <PATH-TO-CONFIG>:/app/config # Make sure your local config directory exists
+      - <PATH-TO-CONFIG>:/app/public/images
+      - /var/run/docker.sock:/var/run/docker.sock # (optional) For docker integrations#
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.homepage.loadBalancer.server.port=3000"
+      #- "traefik.http.routers.homepage.rule=Host(`home.arpa`)"
+      - "traefik.http.routers.homepage.entrypoints=https"
+      - "traefik.http.routers.homepage.tls=true"
+      
+networks:
+  default:
+    name: traefik

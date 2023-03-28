@@ -1,0 +1,29 @@
+version: "3.3"
+
+services:
+  test:
+    image: 
+    container_name: 
+    hostname: 
+    volumes:
+      - ...:...
+    environment:
+      - TZ=Europe/Warsaw
+      - ...=...
+    ports:
+      - ...:...
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.<NAME>.loadBalancer.server.port=<PORT>"
+      #- "traefik.http.routers.<NAME>.rule=Host(`<URL>`)"
+      - "traefik.http.routers.<NAME>.entrypoints=https"
+      - "traefik.http.routers.<NAME>.tls=true"
+      
+networks:
+  default:
+    name: traefik
+  
+# <PATH-TO-CONFIG>
+# <PORT>
+# <URL>

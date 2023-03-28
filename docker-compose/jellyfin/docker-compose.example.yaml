@@ -1,0 +1,51 @@
+version: "2.1"
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Warsaw
+      #- JELLYFIN_PublishedServerUrl=192.168.100.10 #optional
+    volumes:
+      - <PATH-TO-CONFIG>:/config
+      - <PATH-TO-CONFIG>:/data/movies
+      - <PATH-TO-CONFIG>:/data/series
+    ports:
+      - <PORT>:8096
+      - <PORT>:8920 #optional
+      - <PORT>:7359/udp #optional
+      - <PORT>:1900/udp #optional
+    #devices:
+      #- /dev/fb0:/dev/fb0
+      #- /dev/dri/card0:/dev/dri/card0
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.jellyfin.loadBalancer.server.port=8096"
+      #- "traefik.http.routers.jellyfin.rule=Host(`<URL>`)"
+      - "traefik.http.routers.jellyfin.entrypoints=https"
+      - "traefik.http.routers.jellyfin.tls=true"
+    
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+         - LOG_LEVEL=debug
+         - TZ=Europe/Warsaw
+    ports:
+         - <PORT>:5055
+    volumes:
+         - <PATH-TO-CONFIG>:/app/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.jellyseerr.loadBalancer.server.port=5055"
+      #- "traefik.http.routers.jellyseerr.rule=Host(`<URL>`)"
+      - "traefik.http.routers.jellyseerr.entrypoints=https"
+      - "traefik.http.routers.jellyseerr.tls=true"
+      
+networks:
+  default:
+    name: traefik

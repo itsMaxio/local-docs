@@ -1,0 +1,22 @@
+version: '3.3'
+
+services:
+  uptime:
+    image: louislam/uptime-kuma:latest
+    container_name: uptime-kuma
+    volumes:
+      - <PATH-TO-CONFIG>:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - <PORT>:3001
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.uptime-kuma.loadBalancer.server.port=3001"
+      #- "traefik.http.routers.uptime-kuma.rule=Host(`<URL>`)"
+      - "traefik.http.routers.uptime-kuma.entrypoints=https"
+      - "traefik.http.routers.uptime-kuma.tls=true"
+      
+networks:
+  default:
+    name: traefik
