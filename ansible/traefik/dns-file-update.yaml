@@ -1,0 +1,13 @@
+- hosts: all
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Update custom.list file
+      ansible.builtin.script:
+        cmd: '{{ playbook_dir }}/update.py "{{ traefik.traefik_url }}" "{{ traefik.file_path }}" "{{ traefik.ip }}"'
+        executable: python3
+      
+    - name: Restart Pihole DNS
+      ansible.builtin.shell:
+        cmd: pihole restartdns

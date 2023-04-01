@@ -1,1 +1,1 @@
-- import_playbook: .yaml
+- import_playbook: <NAME>.yaml
