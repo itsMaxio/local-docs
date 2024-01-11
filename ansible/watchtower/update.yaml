@@ -19,6 +19,5 @@
           WATCHTOWER_RUN_ONCE: "true"
           WATCHTOWER_CLEANUP: "true"
           WATCHTOWER_NO_STARTUP_MESSAGE: "true"
-          WATCHTOWER_NOTIFICATIONS: "gotify"
-          WATCHTOWER_NOTIFICATION_GOTIFY_URL: "{{ watchtower.gotify_ip }}"
-          WATCHTOWER_NOTIFICATION_GOTIFY_TOKEN: "{{ watchtower.gotify_token }}"
+          WATCHTOWER_NOTIFICATIONS: "shoutrrr"
+          WATCHTOWER_NOTIFICATION_URL: "telegram://{{ watchtower.telegram_token }}@telegram/?chats={{ watchtower.telegram_chat_id }}"

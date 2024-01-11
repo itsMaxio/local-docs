@@ -9,8 +9,8 @@ Add variables to `vars.yaml` file:
 
 watchtower:
   name: "watchtower-update"
-  gotify_ip: "192.168.0.100"
-  gotify_token: "abc123"
+  telegram_token: "aabbccdd:11223344"
+  telegram_chat_id: "123456789"
 
 ...
 ```
