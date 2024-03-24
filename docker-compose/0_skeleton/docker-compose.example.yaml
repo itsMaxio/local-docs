@@ -16,13 +16,14 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.<NAME>.loadBalancer.server.port=<PORT>"
-      #- "traefik.http.routers.<NAME>.rule=Host(`<URL>`)"
+      #- "traefik.http.routers.<NAME>.rule=Host(`<URL>`) || Host(`<URL>`)"
       - "traefik.http.routers.<NAME>.entrypoints=https"
       - "traefik.http.routers.<NAME>.tls=true"
       
 networks:
   default:
     name: traefik
+    external: true
   
 # <PATH-TO-CONFIG>
 # <PORT>
