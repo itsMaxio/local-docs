@@ -5,6 +5,7 @@
 **/tmp*
 **/docker-compose/**/docker-compose.yaml
 **test**
+**/configuration.yml
 
 !**/0_config/*.md
 !**/example*.yaml
