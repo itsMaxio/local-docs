@@ -1,6 +1,0 @@
-- hosts: all
-  gather_facts: false
-  become: false
-
-  tasks:
-    - name: Import variables from file if exists.
