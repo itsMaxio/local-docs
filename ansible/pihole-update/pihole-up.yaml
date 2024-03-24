@@ -1,6 +1,8 @@
-- hosts: all
+- name: Update PiHole
+  hosts: 
+    - all
   gather_facts: false
-  become: yes
+  become: true
 
   tasks:
     - name: PiHole update command.

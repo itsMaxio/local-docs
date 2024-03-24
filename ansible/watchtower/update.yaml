@@ -1,6 +1,8 @@
-- hosts: all
+- name: Watchtower
+  hosts: 
+    - all
   gather_facts: false
-  become: yes
+  become: true
 
   tasks:
     - name: Install Docker SDK for Python
