@@ -34,6 +34,12 @@
         repo: deb https://download.docker.com/linux/ubuntu focal stable
         state: present
 
+    - name: Copy trusted.gpg to trusted.gpg.d
+      ansible.builtin.copy:
+        src: /etc/apt/trusted.gpg
+        dest: /etc/apt/trusted.gpg.d
+        remote_src: yes
+
     - name: Update apt and install docker-ce
       apt:
         name: docker-ce
