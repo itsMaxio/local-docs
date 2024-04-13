@@ -1,5 +1,6 @@
 # Variable config spreadsheet for Installing Docker
-## Before start 
+
+## Before start
 
 ## How to start
 
@@ -8,6 +9,7 @@ Move to the `ansible` directory
 ```bash
 cd ansible
 ```
+
 Run it
 
 ```bash
