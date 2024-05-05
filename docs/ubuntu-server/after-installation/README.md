@@ -1,9 +1,25 @@
 # After installation
 
-## Disable cloud-init
+## Uninstall cloud-init
+
+Disable all services (uncheck everything except "None"):
 
 ```bash
-sudo touch /etc/cloud/cloud-init.disabled
+sudo dpkg-reconfigure cloud-init
+```
+
+Uninstall the package and delete the folders
+
+```bash
+sudo dpkg-reconfigure cloud-init
+sudo apt-get purge cloud-init
+sudo rm -rf /etc/cloud/ && sudo rm -rf /var/lib/cloud/
+```
+
+Restart the computer
+
+```bash
+sudo reboot
 ```
 
 ## Import ssh keys
