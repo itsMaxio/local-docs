@@ -3,6 +3,7 @@
 If the file space in the Docker root directory is not adequate, you must relocate the directory.
 
 # Procedure
+
 To relocate the Docker root directory, complete the following steps as root or a user with “sudo all” authority:
 
 1. Stop the Docker services:
@@ -10,9 +11,11 @@ To relocate the Docker root directory, complete the following steps as root or a
 ```bash
 sudo systemctl stop docker
 ```
+
 ```bash
 sudo systemctl stop docker.socket
 ```
+
 ```bash
 sudo systemctl stop containerd
 ```
@@ -44,7 +47,7 @@ Add the following information to this file:
 ```
 
 5. After the `/etc/docker/daemon.json` file is saved and closed, restart the Docker services:
-   
+
 ```bash
 sudo systemctl start docker
 ```
@@ -57,4 +60,5 @@ sudo docker info -f '{{ .DockerRootDir}}'
 ```
 
 ## Sources
+
 Inspired and based on [Relocating the Docker root directory by IBM](https://www.ibm.com/docs/en/z-logdata-analytics/5.1.0?topic=compose-relocating-docker-root-directory)
