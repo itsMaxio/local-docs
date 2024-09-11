@@ -1,6 +1,6 @@
-import json
 import os
 import sys
+
 import requests
 
 
@@ -12,7 +12,6 @@ def get_json(url):
         return data
     except requests.exceptions.RequestException as e:
         raise SystemExit(e)
-        return None
 
 
 def get_host(route):
@@ -47,25 +46,25 @@ def get_dns_records(file_path):
 
 def write_dns_records(file_path, addr, ip):
     with open(file_path, 'a') as f:
-        f.write(ip+" "+addr + "\n")
+        f.write(ip + " " + addr + "\n")
 
 
 if __name__ == "__main__":
     url = sys.argv[1]
     file_path = sys.argv[2]
     ip = sys.argv[3]
-    
+
     if url.endswith("/"):
-        url+="api/http/routers"
+        url += "api/http/routers"
     else:
-        url+="/api/http/routers"
-    
+        url += "/api/http/routers"
+
     if not check_file_exists(file_path):
         raise Exception("Something wrong with file!")
-    
+
     json = get_json(url)
     dns_records = get_dns_records(file_path)
-    
+
     for route in json:
         if "rule" not in route:
             continue
