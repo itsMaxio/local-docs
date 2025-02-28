@@ -1,4 +1,5 @@
 # **Create Certificates in OPNsense**
+>
 > OPNsense version: 25.1.2
 
 This guide explains how to create **certificates** in OPNsense using a **Certificate Authority (CA)**. These certificates can be used to secure services like HTTPS, VPNs, or internal applications.
@@ -32,10 +33,12 @@ This guide explains how to create **certificates** in OPNsense using a **Cert
     - If you need a **wildcard certificate** or want to include additional domains:
         - Scroll down to the **Alternative Names** section.
         - In the **DNS domain names** box write your domains
-			```
-			home.local
-	        *.home.local
-	        ```
+
+   ```
+   home.local
+         *.home.local
+         ```
+
 6. **Save the Certificate**:
     - Click **Save** to create the certificate.
 

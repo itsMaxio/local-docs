@@ -1,4 +1,5 @@
 # Enabling Communication Between LAN and IOT VLANs for Chromecast on OPNsense
+>
 > OPNsense version: 25.1.2
 
 This guide will help you set up communication between a LAN VLAN and an IOT VLAN containing a Chromecast device on OPNsense. The configuration involves installing the `MDNS Repeater` plugin and creating appropriate firewall rules.
