@@ -38,7 +38,7 @@ Add a line at the end of the /etc/fstab file to define the NFS mount. The genera
 For example:
 
 ```fstab
-192.168.1.100:/shared /mnt/nfsshare nfs defaults 0 0
+192.168.1.100:/shared /mnt/nfsshare nfs defaults,_netdev,hard,noatime,nolock,rsize=1048576,wsize=1048576,timeo=10,retrans=2 0 0
 ```
 
 Replace 192.168.1.100 with the IP address of your NFS server, /shared with the path to the shared directory on the NFS server, and /mnt/nfsshare with the local directory where you want to mount the NFS share.
