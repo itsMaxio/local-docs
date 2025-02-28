@@ -1,4 +1,5 @@
 # Configure WireGuard with OPNsense and a VPS
+> OPNsense version: 25.1.2
 
 This guide will help you configure WireGuard on an OPNsense firewall as a peer and a VPS as the server. The goal is to allow the VPS to access an Ubuntu server (`10.10.20.2/24`) behind OPNsense.
 
