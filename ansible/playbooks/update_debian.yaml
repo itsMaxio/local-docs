@@ -1,0 +1,8 @@
+---
+- name: Apply system updates on Debian
+  hosts: public
+  become: true
+  gather_facts: true
+
+  roles:
+    - apt-update

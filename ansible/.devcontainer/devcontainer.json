@@ -1,0 +1,29 @@
+{
+  "name": "Ansible Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "runArgs": [
+    "--name=ansible-unpriv",
+    "--user=vscode",
+    "--security-opt=no-new-privileges",
+    "--cap-drop=ALL"
+  ],
+  "workspaceFolder": "/ansible",
+  "remoteUser": "vscode",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/ansible,type=bind",
+    "source=${localEnv:USERPROFILE}\\.ssh,target=/home/vscode/.ssh,type=bind,readonly"
+  ],
+  "containerEnv": {
+    "ANSIBLE_CONFIG": "/ansible/ansible.cfg"
+  },
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "ansible.python.interpreterPath": "/usr/local/bin/python"
+  },
+  "extensions": [
+    "redhat.ansible",
+    "ms-vscode-remote.remote-ssh"
+  ]
+}
