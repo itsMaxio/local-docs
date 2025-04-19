@@ -1,6 +1,6 @@
 ---
 - name: Apply system updates on Debian
-  hosts: public
+  hosts: local
   become: true
   gather_facts: true
 

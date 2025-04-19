@@ -1,6 +1,22 @@
 all:
-  hosts:
-    host_name: #custom hostname
-      ansible_host: ip
-      ansible_connection: ssh
-      ansible_user: maxio
+  children:
+    local:
+      hosts:
+        debian-1:
+          ansible_host: 192.168.0.100
+          ansible_connection: ssh
+          ansible_become_method: su
+          ansible_user: maxio
+        debian-2:
+          ansible_host: 192.168.0.200
+          ansible_connection: ssh
+          ansible_become_method: su
+          ansible_user: maxio
+
+    public:
+      hosts:
+        cloud:
+          ansible_host: 1.1.1.1
+          ansible_port: 2222
+          ansible_connection: ssh
+          ansible_user: debian

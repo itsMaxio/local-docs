@@ -1,41 +1,89 @@
 # Ansible installation and configuration
 
-## YAML Files
+## Config files
 
-To run this project, you will need to create two `.yaml` files:
-* `inventory.yaml`
-* `vars.yaml`
+## Ansible file
 
-## Environment Variables
+Create an `ansible.cfg` file in your project root directory or copy inventory file (if available):
+
+```bash
+cp example.ansible.cfg ansible.cfg
+```
 
 ### Inventory file
 
-Move to the `0_config` directory:
-
+Create or navigate to the `inventories` directory (defined in `ansible.cfg`):
 ```bash
-cd 0_config
+mkdir -p inventories && cd inventories
 ```
 
-Copy `example.inventory.yaml` file:
+Copy the example inventory file (if available):
 
 ```bash
 cp example.inventory.yaml inventory.yaml
 ```
 
-Edit variables in `inventory.yaml` file:
+## Playbook execution
 
-```yaml
-all:
-  hosts:
-    host_name: #custom hostname
-      ansible_host: ip
-      ansible_connection: ssh
-      ansible_user: maxio 
-      ansible_password: password # optimal
-      ansible_become_password: sudopassword # optimal
+Available Playbooks:
+- update_debian.yaml  
+  Available tags:
+    - `update` - Refresh apt package cache
+    - `upgrade` - Perform full system upgrade
+    - `reboot` - Reboot if required (conditional)
+  
+
+### Basic commands
+
+Default execution (all hosts in inventory):
+```bash
+ansible-playbook PLAYBOOK.yaml
 ```
 
-### Vars file
+With `sudo` password prompt:
+```bash
+ansible-playbook PLAYBOOK.yaml --ask-become-pass
+```
+
+### Target specific hosts
+
+By hostname:
+```bash
+ansible-playbook PLAYBOOK.yaml --limit "host_name"
+```
+
+By IP address:
+```bash
+ansible-playbook PLAYBOOK.yaml --limit "192.168.1.100"
+```
+
+### Tag-Based execution
+
+Run with specific tag:
+```bash
+ansible-playbook PLAYBOOK.yaml --tags "tag1"
+```
+
+Run with multiple tags:
+```bash
+ansible-playbook PLAYBOOK.yaml --tags "tag1, tag2"
+```
+
+### Testing and troubleshooting
+
+Dry run mode (simulation):
+```bash
+ansible-playbook PLAYBOOK.yaml --check --diff
+```
+
+Dry run mode with `sudo` (simulation):
+```bash
+ansible-playbook PLAYBOOK.yaml --ask-become-pass --check --diff
+```
+> Enable detailed debugging with -vvv:
+
+
+<!-- ### Vars file
 
 Copy `example.inventory.yaml` file:
 
@@ -51,4 +99,4 @@ List of possible configurations:
 - [Apt Update](apt-update/README.md)
 - [Watchtower](watchtower/README.md)
 - [PiHole](pihole-update/README.md)
-- [Rclone](rclone/README.md)
+- [Rclone](rclone/README.md) -->
