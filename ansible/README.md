@@ -13,6 +13,7 @@ cp example.ansible.cfg ansible.cfg
 ### Inventory file
 
 Create or navigate to the `inventories` directory (defined in `ansible.cfg`):
+
 ```bash
 mkdir -p inventories && cd inventories
 ```
@@ -26,21 +27,23 @@ cp example.inventory.yaml inventory.yaml
 ## Playbook execution
 
 Available Playbooks:
+
 - update_debian.yaml  
   Available tags:
-    - `update` - Refresh apt package cache
-    - `upgrade` - Perform full system upgrade
-    - `reboot` - Reboot if required (conditional)
+  - `update` - Refresh apt package cache
+  - `upgrade` - Perform full system upgrade
+  - `reboot` - Reboot if required (conditional)
   
-
 ### Basic commands
 
 Default execution (all hosts in inventory):
+
 ```bash
 ansible-playbook PLAYBOOK.yaml
 ```
 
 With `sudo` password prompt:
+
 ```bash
 ansible-playbook PLAYBOOK.yaml --ask-become-pass
 ```
@@ -48,11 +51,13 @@ ansible-playbook PLAYBOOK.yaml --ask-become-pass
 ### Target specific hosts
 
 By hostname:
+
 ```bash
 ansible-playbook PLAYBOOK.yaml --limit "host_name"
 ```
 
 By IP address:
+
 ```bash
 ansible-playbook PLAYBOOK.yaml --limit "192.168.1.100"
 ```
@@ -60,11 +65,13 @@ ansible-playbook PLAYBOOK.yaml --limit "192.168.1.100"
 ### Tag-Based execution
 
 Run with specific tag:
+
 ```bash
 ansible-playbook PLAYBOOK.yaml --tags "tag1"
 ```
 
 Run with multiple tags:
+
 ```bash
 ansible-playbook PLAYBOOK.yaml --tags "tag1, tag2"
 ```
@@ -72,16 +79,18 @@ ansible-playbook PLAYBOOK.yaml --tags "tag1, tag2"
 ### Testing and troubleshooting
 
 Dry run mode (simulation):
+
 ```bash
 ansible-playbook PLAYBOOK.yaml --check --diff
 ```
 
 Dry run mode with `sudo` (simulation):
+
 ```bash
 ansible-playbook PLAYBOOK.yaml --ask-become-pass --check --diff
 ```
-> Enable detailed debugging with -vvv:
 
+> Enable detailed debugging with -vvv:
 
 <!-- ### Vars file
 
