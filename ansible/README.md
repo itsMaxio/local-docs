@@ -1,8 +1,6 @@
 # Ansible installation and configuration
 
-## Config files
-
-## Ansible file
+## Ansible config file
 
 Create an `ansible.cfg` file in your project root directory or copy inventory file (if available):
 
