@@ -37,13 +37,13 @@ Available Playbooks:
 Default execution (all hosts in inventory):
 
 ```bash
-ansible-playbook PLAYBOOK.yaml
+ansible-playbook playbooks/PLAYBOOK.yaml
 ```
 
 With `sudo` password prompt:
 
 ```bash
-ansible-playbook PLAYBOOK.yaml --ask-become-pass
+ansible-playbook playbooks/PLAYBOOK.yaml --ask-become-pass
 ```
 
 ### Target specific hosts
@@ -51,13 +51,13 @@ ansible-playbook PLAYBOOK.yaml --ask-become-pass
 By hostname:
 
 ```bash
-ansible-playbook PLAYBOOK.yaml --limit "host_name"
+ansible-playbook playbooks/PLAYBOOK.yaml --limit "host_name"
 ```
 
 By IP address:
 
 ```bash
-ansible-playbook PLAYBOOK.yaml --limit "192.168.1.100"
+ansible-playbook playbooks/PLAYBOOK.yaml --limit "192.168.1.100"
 ```
 
 ### Tag-Based execution
@@ -65,13 +65,13 @@ ansible-playbook PLAYBOOK.yaml --limit "192.168.1.100"
 Run with specific tag:
 
 ```bash
-ansible-playbook PLAYBOOK.yaml --tags "tag1"
+ansible-playbook playbooks/PLAYBOOK.yaml --tags "tag1"
 ```
 
 Run with multiple tags:
 
 ```bash
-ansible-playbook PLAYBOOK.yaml --tags "tag1, tag2"
+ansible-playbook playbooks/PLAYBOOK.yaml --tags "tag1, tag2"
 ```
 
 ### Testing and troubleshooting
@@ -79,13 +79,13 @@ ansible-playbook PLAYBOOK.yaml --tags "tag1, tag2"
 Dry run mode (simulation):
 
 ```bash
-ansible-playbook PLAYBOOK.yaml --check --diff
+ansible-playbook playbooks/PLAYBOOK.yaml --check --diff
 ```
 
 Dry run mode with `sudo` (simulation):
 
 ```bash
-ansible-playbook PLAYBOOK.yaml --ask-become-pass --check --diff
+ansible-playbook playbooks/PLAYBOOK.yaml --ask-become-pass --check --diff
 ```
 
 > Enable detailed debugging with -vvv:

@@ -1,0 +1,13 @@
+---
+- name: Install Docker and configure cron
+  hosts: local
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: geerlingguy.docker
+      tags: docker_install
+      
+    - role: docker_image_cleanup_cron
+      when: docker_cleanup_enabled
+      tags: docker_cleanup
