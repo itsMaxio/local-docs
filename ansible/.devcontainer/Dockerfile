@@ -3,6 +3,7 @@ FROM python:3.11-slim
 RUN apt-get update && apt-get install -y \
     openssh-client \
     git \
+    sshpass \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip && \

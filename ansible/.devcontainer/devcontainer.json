@@ -4,15 +4,15 @@
     "dockerfile": "Dockerfile"
   },
   "runArgs": [
-    "--name=ansible-unpriv",
+    "--name=ansible-debug",
     "--user=vscode",
     "--security-opt=no-new-privileges",
     "--cap-drop=ALL"
   ],
-  "workspaceFolder": "/ansible",
   "remoteUser": "vscode",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/ansible,type=bind",
+  "workspaceFolder": "/ansible",
   "mounts": [
-    "source=${localWorkspaceFolder},target=/ansible,type=bind",
     "source=${localEnv:USERPROFILE}\\.ssh,target=/home/vscode/.ssh,type=bind,readonly"
   ],
   "containerEnv": {
