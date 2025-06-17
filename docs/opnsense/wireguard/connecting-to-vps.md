@@ -1,7 +1,7 @@
 # Configure WireGuard with OPNsense and a VPS
 > OPNsense version: 25.1.2
 
-This guide will help you configure WireGuard on an OPNsense firewall as a peer and a VPS as the server. The goal is to allow the VPS to access an Ubuntu server (`10.10.20.2/24`) behind OPNsense.
+This guide will help you configure WireGuard on an OPNsense firewall as a peer and a VPS as the server. The goal is to allow the VPS to access an server (`10.10.20.2/24`) behind OPNsense.
 
 ---
 
@@ -37,19 +37,20 @@ Save the **public key** for the VPS configuration.
    - **Enabled:** ✅
    - **Name:** `VPS_Instance`
    - **Private Key:** `<OPNSENSE_PRIVATE_KEY>` (from `privatekey`)
+   - **Public Key:** `<OPNSENSE_PUBLIC_KEY>` (from `publickey`)
    - **Tunnel Address:** `10.10.10.2/24`
    - Click **Save** and **Apply Changes**.
 
 ---
 
-### **1.3. Add Peer (VPS)**
+### **1.3. Add Peer (your VPS)**
 
 1. Go to the **Peers** tab and click **Add**.
 2. Configure as follows:
    - **Enabled:** ✅
    - **Name:** `VPS`
-   - **Public Key:** `<VPS_PUBLIC_KEY>` (from the VPS)
-   - **Allowed IPs:** `10.10.10.0/24, 10.10.20.0/24`
+   - **Public Key:** `<VPS_PUBLIC_KEY>` (from the VPS generation below)
+   - **Allowed IPs:** `10.10.10.1/32, 10.10.10.0/24`
    - **Endpoint Address:** `<VPS_PUBLIC_IP>`
    - **Endpoint Port:** `51820`
    - **Persistent Keepalive:** `25`
@@ -87,28 +88,27 @@ sudo nano /etc/wireguard/wg0.conf
 
 Add the following:
 
-```ini
+```conf
 [Interface]
-PrivateKey = <VPS_PRIVATE_KEY>
+PrivateKey = <VPS_PRIVATE_KEY> #This is private key of VPS
 Address = 10.10.10.1/24
 ListenPort = 51820
 
 [Peer]
-PublicKey = <OPNSENSE_PUBLIC_KEY>
+PublicKey = <OPNSENSE_PUBLIC_KEY> #This is public key of OPNsense
 AllowedIPs = 10.10.10.2/32, 10.10.20.0/24
+#AllowedIPs = 10.10.10.2/32, 10.10.20.0/24, 10.10.30.0/24
+#If you want you can add more subnets then VPS will be able to communicate with them. Of course you have to change the rules in OPNsense
 PersistentKeepalive = 25
 ```
 
-- Replace `<VPS_PRIVATE_KEY>` with the content of `privatekey`.
-- Replace `<OPNSENSE_PUBLIC_KEY>` with the public key from OPNsense.
-
 ---
 
-### **2.4. Enable and Start WireGuard**
+### **2.4. Start WireGuard and enable on boot**
 
 ```bash
-sudo systemctl enable wg-quick@wg0
 sudo systemctl start wg-quick@wg0
+sudo systemctl enable wg-quick@wg0
 ```
 
 ---
@@ -121,14 +121,14 @@ sudo systemctl start wg-quick@wg0
    - **Interface:** WireGuard
    - **Protocol:** Any
    - **Source:** WireGuard Net
-   - **Destination:** Any
+   - **Destination:** `<WHERE YOU WANT>`
    - Click **Save** and **Apply Changes**.
 
 ---
 
-## **4. Allow WireGuard Port on VPS Firewall**
+## **4. Allow access WireGuard Port on VPS Firewall**
 
-If your VPS has a firewall (e.g., UFW or cloud provider firewall), allow the WireGuard port:
+If your VPS has a firewall (UFW or cloud provider firewall), allow the WireGuard port:
 
 ### **UFW Example**
 
@@ -175,24 +175,16 @@ sudo sysctl -p
    ping 10.10.10.2
    ```
 
-3. From the VPS, ping the Ubuntu server behind OPNsense:
+3. From the VPS, ping the another subnet behind OPNsense:
 
    ```bash
    ping 10.10.20.2
    ```
 
-4. From the Ubuntu server, ping the VPS:
+4. From the example server behind OPNsense, ping the VPS:
 
    ```bash
    ping 10.10.10.1
    ```
 
 If you see a **handshake** in `wg show` and successful pings, the connection is working!
-
----
-
-This guide ensures that WireGuard is properly configured with **OPNsense as a peer**, **VPS as the server**, and access to the **Ubuntu server behind OPNsense**. Let me know if you need further assistance! 🚀
-
----
-
-You can copy and paste this Markdown content into any Markdown editor or file (e.g., `.md`). Let me know if you need further adjustments!
