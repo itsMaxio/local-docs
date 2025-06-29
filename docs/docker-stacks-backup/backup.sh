@@ -41,6 +41,11 @@ ping_fail()
   curl -fsS -m 30 "$HEALTHCHECKS_URL/fail" >/dev/null || true
 }
 
+ping_log() {
+  curl -fsS -m 60 \
+    -H "Content-Type: text/plain" --data-binary @"$LOG_FILE" "$HEALTHCHECKS_URL/log" >/dev/null || true
+}
+
 docker_compose_down()
 {
   local service_dir="$1"
@@ -73,7 +78,7 @@ restic_backup()
   local service_name="$(basename "${service_dir%/}")"
 
   echo "[$(date -Iseconds)] RESTIC: Backup start: $service_dir (tag: $service_name)" >> "$LOG_FILE"
-  if ! restic -r "$RESTIC_REPOSITORY" backup "$service_dir" --tag "$service_name" --cleanup-cache >>"$LOG_FILE" 2>&1; then
+  if ! restic -r "$RESTIC_REPOSITORY" backup "$service_dir" --tag "$service_name" --cleanup-cache --verbose >>"$LOG_FILE" 2>&1; then
       echo "[$(date -Iseconds)] ERROR: backup $service_dir" >> "$LOG_FILE"
       return 1
   fi
@@ -148,7 +153,9 @@ if (( global_error == 0 )); then
   restic_check
   echo "[$(date -Iseconds)] SCRIPT: Backup completed successfully" >> "$LOG_FILE"
   ping_success
+  ping_log
 else
   echo "[$(date -Iseconds)] SCRIPT: Backup completed with errors" >> "$LOG_FILE"
   ping_fail
+  ping_log
 fi
