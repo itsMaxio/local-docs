@@ -20,6 +20,12 @@ fi
 LOG_FILE="$LOG_FILES_DIRECTORY/log-$(date +"%Y-%m-%d_%H_%M").txt"
 touch "$LOG_FILE"
 
+log() {
+  echo "" >> "$LOG_FILE"
+  echo "[$(date -Iseconds)] $*" >> "$LOG_FILE"
+  echo "" >> "$LOG_FILE"
+}
+
 find "$LOG_FILES_DIRECTORY" -type f -name '*.txt' -printf '%T@ %p\0' |
   sort -z -nr |
   tail -z -n +$((LOG_FILES_KEEP + 1)) |
@@ -41,62 +47,59 @@ ping_fail()
   curl -fsS -m 30 "$HEALTHCHECKS_URL/fail" >/dev/null || true
 }
 
-ping_log() {
-  curl -fsS -m 60 \
-    -H "Content-Type: text/plain" --data-binary @"$LOG_FILE" "$HEALTHCHECKS_URL/log" >/dev/null || true
+ping_log() 
+{
+  curl -fsS -m 60 -H "Content-Type: text/plain" --data-binary @"$LOG_FILE" "$HEALTHCHECKS_URL/log" >/dev/null || true
 }
 
 docker_compose_down()
 {
   local service_dir="$1"
-  echo "[$(date -Iseconds)] DOCKER_COMPOSE: Stopping: $service_dir" >> "$LOG_FILE"
+  log "DOCKER_COMPOSE: Stopping: $service_dir"
   (
-      cd "$service_dir" || return 1
-      if ! docker compose stop >>"$LOG_FILE" 2>&1; then
-          echo "[$(date -Iseconds)] ERROR: Stopping: $service_dir" >> "$LOG_FILE"
-          return 1
-      fi
+    cd "$service_dir" || return 1
+    if ! docker compose stop >>"$LOG_FILE" 2>&1; then
+      log "ERROR: Stopping: $service_dir"
+      return 1
+    fi
   )
 }
 
-docker_compose_up()
-{
+docker_compose_up() {
   local service_dir="$1"
-  echo "[$(date -Iseconds)] DOCKER_COMPOSE: Starting: $service_dir" >> "$LOG_FILE"
+  log "DOCKER_COMPOSE: Starting: $service_dir"
   (
-      cd "$service_dir" || return 1
-      if ! docker compose start >>"$LOG_FILE" 2>&1; then
-          echo "[$(date -Iseconds)] ERROR: Starting: $service_dir" >> "$LOG_FILE"
-          return 1
-      fi
+    cd "$service_dir" || return 1
+    if ! docker compose start >>"$LOG_FILE" 2>&1; then
+      log "ERROR: Starting: $service_dir"
+      return 1
+    fi
   )
 }
 
-restic_backup()
-{
+restic_backup() {
   local service_dir="$1"
   local service_name="$(basename "${service_dir%/}")"
 
-  echo "[$(date -Iseconds)] RESTIC: Backup start: $service_dir (tag: $service_name)" >> "$LOG_FILE"
+  log "RESTIC: Backup start: $service_dir (tag: $service_name)"
   if ! restic -r "$RESTIC_REPOSITORY" backup "$service_dir" --tag "$service_name" --cleanup-cache --verbose >>"$LOG_FILE" 2>&1; then
-      echo "[$(date -Iseconds)] ERROR: backup $service_dir" >> "$LOG_FILE"
-      return 1
+    log "ERROR: backup $service_dir"
+    return 1
   fi
 }
 
 restic_forget() {
-  echo "[$(date -Iseconds)] RESTIC: Starting retention policy" >> "$LOG_FILE"
+  log "RESTIC: Starting retention policy"
   restic -r "$RESTIC_REPOSITORY" forget --group-by tags \
-                --keep-last "${RESTIC_KEEP_LAST}" \
-                --prune \
-                >>"$LOG_FILE" 2>&1 || true
-  echo "[$(date -Iseconds)] RESTIC: Ending retention policy" >> "$LOG_FILE"
+        --keep-last "${RESTIC_KEEP_LAST}" \
+        --prune >>"$LOG_FILE" 2>&1 || true
+  log "RESTIC: Ending retention policy"
 }
 
 restic_check() {
-  echo "[$(date -Iseconds)] RESTIC: Starting checking repository integrity" >> "$LOG_FILE"
+  log "RESTIC: Starting checking repository integrity"
   restic -r "$RESTIC_REPOSITORY" check >>"$LOG_FILE" 2>&1
-  echo "[$(date -Iseconds)] RESTIC: Ending checking repository integrity" >> "$LOG_FILE"
+  log "RESTIC: Ending checking repository integrity"
 }
 
 LOCKFILE="/tmp/$(basename "$0").lock"
@@ -108,16 +111,16 @@ fi
 
 global_error=0
 
-echo -e "[$(date -Iseconds)] SCRIPT: Backup starting..." >> "$LOG_FILE"
+log "SCRIPT: Backup starting..."
 ping_start
 
 if ! restic -r "$RESTIC_REPOSITORY" snapshots --quiet >/dev/null 2>&1; then
-  echo "[$(date -Iseconds)] ERROR: Repository does not exists: $RESTIC_REPOSITORY" >&2
+  echo "[$(date -Iseconds)] ERROR: Repository does not exist: $RESTIC_REPOSITORY" >&2
   exit 1
 fi
 
 for service_dir in "$DOCKER_STACKS_LOCATION"/*/; do
-  echo -e "\n[$(date -Iseconds)] SCRIPT: Processing: $service_dir" >> "$LOG_FILE"
+  log "SCRIPT: Processing: $service_dir"
 
   service_error=0
 
@@ -125,25 +128,25 @@ for service_dir in "$DOCKER_STACKS_LOCATION"/*/; do
   if [[ ${#running[@]} -gt 0 && -n "${running[0]}" ]]; then
 
     if ! docker_compose_down "$service_dir"; then
-        global_error=1
-        service_error=1
-        echo "[$(date -Iseconds)] SCRIPT: Skipping backup for: $service_dir (error with docker compose)" >> "$LOG_FILE"
-        continue
+      global_error=1
+      service_error=1
+      log "SCRIPT: Skipping backup for: $service_dir (error with docker compose)"
+      continue
     fi
 
     if ! restic_backup "$service_dir"; then
-        global_error=1
+      global_error=1
     fi
 
-    if (( service_error == 0 )) ; then
-        if ! docker_compose_up "$service_dir"; then
-            global_error=1
-            service_error=1
-        fi
+    if (( service_error == 0 )); then
+      if ! docker_compose_up "$service_dir"; then
+        global_error=1
+        service_error=1
+      fi
     fi
   else
     if ! restic_backup "$service_dir"; then
-        global_error=1
+      global_error=1
     fi
   fi
 done
@@ -151,11 +154,11 @@ done
 if (( global_error == 0 )); then
   restic_forget
   restic_check
-  echo "[$(date -Iseconds)] SCRIPT: Backup completed successfully" >> "$LOG_FILE"
+  log "SCRIPT: Backup completed successfully"
   ping_success
   ping_log
 else
-  echo "[$(date -Iseconds)] SCRIPT: Backup completed with errors" >> "$LOG_FILE"
+  log "SCRIPT: Backup completed with errors"
   ping_fail
   ping_log
 fi
