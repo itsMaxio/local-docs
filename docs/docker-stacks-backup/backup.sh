@@ -23,14 +23,29 @@ fi
 LOG_FILE="$LOG_FILES_DIRECTORY/log-$(date + "%Y-%m-%d_%H_%M").txt"
 touch "$LOG_FILE"
 
-log() {
-  time="[$(date -Iseconds)]"
+log() 
+{
+  local no_newline=0
+
+  if [[ "$1" == "--no-newline" ]]; then
+    no_newline=1
+    shift
+  fi
+
+  local time="[$(date -Iseconds)]"
+
   {
-    echo ""
+    if (( no_newline == 0 )); then
+      echo ""
+    fi
+
     for line in "$@"; do
       echo "$time $line"
     done
-    echo ""
+
+    if (( no_newline == 0 )); then
+      echo ""
+    fi
   } >> "$LOG_FILE"
 }
 
@@ -146,9 +161,9 @@ for service_dir in "$DOCKER_STACKS_LOCATION"/*/; do
   fi
 done
 
-how_many_services=$(ls "$DOCKER_STACKS_LOCATION"| wc -l)
+how_many_services=$(ls "$DOCKER_STACKS_LOCATION" | wc -l)
 
-log "SCRIPT: There are ${#how_many_services[@]} services to backup, of which ${#services_to_restart[@]} are currently running:" "${services_to_restart[@]}"
+log "SCRIPT: There are $how_many_services services to backup, of which ${#services_to_restart[@]} are currently running:" "${services_to_restart[@]}"
 
 log "SCRIPT: Backing up entire directory: $DOCKER_STACKS_LOCATION"
 if ! restic_backup "$DOCKER_STACKS_LOCATION"; then
@@ -156,7 +171,6 @@ if ! restic_backup "$DOCKER_STACKS_LOCATION"; then
 fi
 
 log "SCRIPT: Starting services..."
-
 for service_dir in "${services_to_restart[@]}"; do
   if ! docker_compose_up "$service_dir"; then
     global_error=1
