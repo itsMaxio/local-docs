@@ -1,6 +1,8 @@
 #!/bin/bash
+
 set -euo pipefail
 IFS=$'\n\t'
+shopt -s nullglob
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="$SCRIPT_DIR/config.env"
@@ -13,17 +15,23 @@ fi
 source "$CONFIG_FILE"
 export RESTIC_PASSWORD
 
+LOG_FILES_DIRECTORY=$(realpath -s "$LOG_FILES_DIRECTORY")
 if [[ ! -d "$LOG_FILES_DIRECTORY" ]]; then
   mkdir -p "$LOG_FILES_DIRECTORY"
 fi
 
-LOG_FILE="$LOG_FILES_DIRECTORY/log-$(date +"%Y-%m-%d_%H_%M").txt"
+LOG_FILE="$LOG_FILES_DIRECTORY/log-$(date + "%Y-%m-%d_%H_%M").txt"
 touch "$LOG_FILE"
 
 log() {
-  echo "" >> "$LOG_FILE"
-  echo "[$(date -Iseconds)] $*" >> "$LOG_FILE"
-  echo "" >> "$LOG_FILE"
+  time="[$(date -Iseconds)]"
+  {
+    echo ""
+    for line in "$@"; do
+      echo "$time $line"
+    done
+    echo ""
+  } >> "$LOG_FILE"
 }
 
 find "$LOG_FILES_DIRECTORY" -type f -name '*.txt' -printf '%T@ %p\0' |
@@ -55,11 +63,11 @@ ping_log()
 docker_compose_down()
 {
   local service_dir="$1"
-  log "DOCKER_COMPOSE: Stopping: $service_dir"
+  log "DOCKER_COMPOSE_DOWN: Stopping: $service_dir"
   (
     cd "$service_dir" || return 1
     if ! docker compose stop >>"$LOG_FILE" 2>&1; then
-      log "ERROR: Stopping: $service_dir"
+      log "DOCKER_COMPOSE_DOWN_ERROR: Stopping: $service_dir"
       return 1
     fi
   )
@@ -67,30 +75,29 @@ docker_compose_down()
 
 docker_compose_up() {
   local service_dir="$1"
-  log "DOCKER_COMPOSE: Starting: $service_dir"
+  log "DOCKER_COMPOSE_UP: Starting: $service_dir"
   (
     cd "$service_dir" || return 1
     if ! docker compose start >>"$LOG_FILE" 2>&1; then
-      log "ERROR: Starting: $service_dir"
+      log "DOCKER_COMPOSE_UP_ERROR: Problem starting: $service_dir"
       return 1
     fi
   )
 }
 
 restic_backup() {
-  local service_dir="$1"
-  local service_name="$(basename "${service_dir%/}")"
+  local dir_to_backup="$1"
 
-  log "RESTIC: Backup start: $service_dir (tag: $service_name)"
-  if ! restic -r "$RESTIC_REPOSITORY" backup "$service_dir" --tag "$service_name" --cleanup-cache --verbose >>"$LOG_FILE" 2>&1; then
-    log "ERROR: backup $service_dir"
+  log "RESTIC: Backup start: $dir_to_backup"
+  if ! restic -r "$RESTIC_REPOSITORY" backup "$dir_to_backup" --cleanup-cache --verbose >>"$LOG_FILE" 2>&1; then
+    log "RESTIC_ERROR: Error while backing up: $dir_to_backup"
     return 1
   fi
 }
 
 restic_forget() {
   log "RESTIC: Starting retention policy"
-  restic -r "$RESTIC_REPOSITORY" forget --group-by tags \
+  restic -r "$RESTIC_REPOSITORY" forget \
         --keep-last "${RESTIC_KEEP_LAST}" \
         --prune >>"$LOG_FILE" 2>&1 || true
   log "RESTIC: Ending retention policy"
@@ -105,7 +112,7 @@ restic_check() {
 LOCKFILE="/tmp/$(basename "$0").lock"
 exec 200>"$LOCKFILE"
 if ! flock -n 200; then
-  echo "[$(date -Iseconds)] ERROR: Backup is already working" >&2
+  log " ERROR: Backup is already working"
   exit 1
 fi
 
@@ -115,39 +122,44 @@ log "SCRIPT: Backup starting..."
 ping_start
 
 if ! restic -r "$RESTIC_REPOSITORY" snapshots --quiet >/dev/null 2>&1; then
-  echo "[$(date -Iseconds)] ERROR: Repository does not exist: $RESTIC_REPOSITORY" >&2
+  log "ERROR: Repository does not exist: $RESTIC_REPOSITORY"
   exit 1
 fi
 
+services_to_restart=()
+
+log "SCRIPT: Stopping services..."
 for service_dir in "$DOCKER_STACKS_LOCATION"/*/; do
-  log "SCRIPT: Processing: $service_dir"
+  log "SCRIPT: Checking: $service_dir"
 
-  service_error=0
-
-  mapfile -t running < <(docker compose -f "$service_dir/compose.yaml" ps --services --filter "status=running")
+  mapfile -t running < <(docker compose -f "$service_dir/compose.yaml" ps --services --filter "status=running" 2>/dev/null)
+  
   if [[ ${#running[@]} -gt 0 && -n "${running[0]}" ]]; then
-
-    if ! docker_compose_down "$service_dir"; then
-      global_error=1
-      service_error=1
-      log "SCRIPT: Skipping backup for: $service_dir (error with docker compose)"
-      continue
-    fi
-
-    if ! restic_backup "$service_dir"; then
+    log "SCRIPT: Found running services in $service_dir: ${running[*]}"
+    
+    if docker_compose_down "$service_dir"; then
+      services_to_restart+=("$service_dir")
+      log "SCRIPT: Marked for restart: $service_dir"
+    else
       global_error=1
     fi
+  fi
+done
 
-    if (( service_error == 0 )); then
-      if ! docker_compose_up "$service_dir"; then
-        global_error=1
-        service_error=1
-      fi
-    fi
-  else
-    if ! restic_backup "$service_dir"; then
-      global_error=1
-    fi
+how_many_services=$(ls "$DOCKER_STACKS_LOCATION"| wc -l)
+
+log "SCRIPT: There are ${#how_many_services[@]} services to backup, of which ${#services_to_restart[@]} are currently running:" "${services_to_restart[@]}"
+
+log "SCRIPT: Backing up entire directory: $DOCKER_STACKS_LOCATION"
+if ! restic_backup "$DOCKER_STACKS_LOCATION"; then
+  global_error=1
+fi
+
+log "SCRIPT: Starting services..."
+
+for service_dir in "${services_to_restart[@]}"; do
+  if ! docker_compose_up "$service_dir"; then
+    global_error=1
   fi
 done
 
@@ -156,9 +168,9 @@ if (( global_error == 0 )); then
   restic_check
   log "SCRIPT: Backup completed successfully"
   ping_success
-  ping_log
 else
   log "SCRIPT: Backup completed with errors"
   ping_fail
-  ping_log
 fi
+  
+ping_log
