@@ -1,0 +1,10 @@
+---
+- name: Ansible connection test
+  hosts: all
+  tasks:
+    - name: Send ping
+      ansible.builtin.ping:
+
+    - name: Show system informations
+      debug:
+        msg: "Dist: {{ ansible_distribution }} {{ ansible_distribution_version }}"
