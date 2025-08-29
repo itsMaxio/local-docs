@@ -14,36 +14,37 @@ fi
 
 source "$CONFIG_FILE"
 export RESTIC_PASSWORD
+export RESTIC_PROGRESS_FPS
 
 LOG_FILES_DIRECTORY=$(realpath -s "$LOG_FILES_DIRECTORY")
 if [[ ! -d "$LOG_FILES_DIRECTORY" ]]; then
   mkdir -p "$LOG_FILES_DIRECTORY"
 fi
 
-LOG_FILE="$LOG_FILES_DIRECTORY/log-$(date + "%Y-%m-%d_%H_%M").txt"
+LOG_FILE="$LOG_FILES_DIRECTORY/log-$(date +"%Y-%m-%d_%H_%M").txt"
 touch "$LOG_FILE"
 
 log() 
 {
-  local no_newline=0
+  local newline=0
 
-  if [[ "$1" == "--no-newline" ]]; then
-    no_newline=1
+  if [[ "$1" = "--newline" ]]; then
+    newline=1
     shift
   fi
 
   local time="[$(date -Iseconds)]"
 
   {
-    if (( no_newline == 0 )); then
+    if (( newline == 1 )); then
       echo ""
     fi
 
     for line in "$@"; do
-      echo "$time $line"
+      echo -e "$time $line"
     done
 
-    if (( no_newline == 0 )); then
+    if (( newline == 1 )); then
       echo ""
     fi
   } >> "$LOG_FILE"
@@ -70,7 +71,7 @@ ping_fail()
   curl -fsS -m 30 "$HEALTHCHECKS_URL/fail" >/dev/null || true
 }
 
-ping_log() 
+ping_log()
 {
   curl -fsS -m 60 -H "Content-Type: text/plain" --data-binary @"$LOG_FILE" "$HEALTHCHECKS_URL/log" >/dev/null || true
 }
@@ -78,7 +79,7 @@ ping_log()
 docker_compose_down()
 {
   local service_dir="$1"
-  log "DOCKER_COMPOSE_DOWN: Stopping: $service_dir"
+  log --newline "DOCKER_COMPOSE_DOWN: Stopping: $service_dir"
   (
     cd "$service_dir" || return 1
     if ! docker compose stop >>"$LOG_FILE" 2>&1; then
@@ -88,9 +89,10 @@ docker_compose_down()
   )
 }
 
-docker_compose_up() {
+docker_compose_up()
+{
   local service_dir="$1"
-  log "DOCKER_COMPOSE_UP: Starting: $service_dir"
+  log --newline "DOCKER_COMPOSE_UP: Starting: $service_dir"
   (
     cd "$service_dir" || return 1
     if ! docker compose start >>"$LOG_FILE" 2>&1; then
@@ -111,29 +113,29 @@ restic_backup() {
 }
 
 restic_forget() {
-  log "RESTIC: Starting retention policy"
+  log --newline "RESTIC: Starting retention policy"
   restic -r "$RESTIC_REPOSITORY" forget \
         --keep-last "${RESTIC_KEEP_LAST}" \
         --prune >>"$LOG_FILE" 2>&1 || true
-  log "RESTIC: Ending retention policy"
+  log --newline "RESTIC: Ending retention policy"
 }
 
 restic_check() {
-  log "RESTIC: Starting checking repository integrity"
+  log --newline "RESTIC: Starting checking repository integrity"
   restic -r "$RESTIC_REPOSITORY" check >>"$LOG_FILE" 2>&1
-  log "RESTIC: Ending checking repository integrity"
+  log --newline "RESTIC: Ending checking repository integrity"
 }
 
 LOCKFILE="/tmp/$(basename "$0").lock"
 exec 200>"$LOCKFILE"
 if ! flock -n 200; then
-  log " ERROR: Backup is already working"
+  log "ERROR: Backup is already working"
   exit 1
 fi
 
 global_error=0
 
-log "SCRIPT: Backup starting..."
+log --newline "SCRIPT: Backup starting..."
 ping_start
 
 if ! restic -r "$RESTIC_REPOSITORY" snapshots --quiet >/dev/null 2>&1; then
@@ -143,34 +145,35 @@ fi
 
 services_to_restart=()
 
-log "SCRIPT: Stopping services..."
+log --newline "SCRIPT: Stopping services..."
 for service_dir in "$DOCKER_STACKS_LOCATION"/*/; do
-  log "SCRIPT: Checking: $service_dir"
+  log --newline "SCRIPT: Checking: $service_dir"
 
   mapfile -t running < <(docker compose -f "$service_dir/compose.yaml" ps --services --filter "status=running" 2>/dev/null)
   
   if [[ ${#running[@]} -gt 0 && -n "${running[0]}" ]]; then
-    log "SCRIPT: Found running services in $service_dir: ${running[*]}"
+    log "SCRIPT: Found running services in $service_dir: \n\n${running[*]}"
     
     if docker_compose_down "$service_dir"; then
       services_to_restart+=("$service_dir")
-      log "SCRIPT: Marked for restart: $service_dir"
     else
       global_error=1
     fi
+  else
+    log "SCRIPT: Found no services running in $service_dir"
   fi
 done
 
 how_many_services=$(ls "$DOCKER_STACKS_LOCATION" | wc -l)
 
-log "SCRIPT: There are $how_many_services services to backup, of which ${#services_to_restart[@]} are currently running:" "${services_to_restart[@]}"
+log --newline "SCRIPT: There are $how_many_services services to backup, of which ${#services_to_restart[@]} are currently running:" "${services_to_restart[@]}"
 
-log "SCRIPT: Backing up entire directory: $DOCKER_STACKS_LOCATION"
+log --newline "SCRIPT: Backing up entire directory: $DOCKER_STACKS_LOCATION"
 if ! restic_backup "$DOCKER_STACKS_LOCATION"; then
   global_error=1
 fi
 
-log "SCRIPT: Starting services..."
+log --newline "SCRIPT: Starting services..."
 for service_dir in "${services_to_restart[@]}"; do
   if ! docker_compose_up "$service_dir"; then
     global_error=1
@@ -180,11 +183,11 @@ done
 if (( global_error == 0 )); then
   restic_forget
   restic_check
-  log "SCRIPT: Backup completed successfully"
+  log --newline "SCRIPT: Backup completed successfully"
   ping_success
 else
-  log "SCRIPT: Backup completed with errors"
+  log --newline "SCRIPT: Backup completed with errors"
   ping_fail
 fi
-  
+
 ping_log

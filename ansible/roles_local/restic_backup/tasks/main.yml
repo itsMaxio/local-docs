@@ -1,0 +1,48 @@
+---
+# - import_tasks: checks.yaml
+
+- name: Update repositories cache and install Restic package
+  ansible.builtin.apt:
+    name: restic
+    update_cache: yes
+    state: present
+
+- name: Add SSH key to machine
+  ansible.builtin.template:
+    src: backup_key.j2
+    dest: {{ restic_backup__key_file_location }}
+    owner: {{ restic_backup__user }}
+    group: {{ restic_backup__group }}
+    mode: '0600'
+    backup: yes
+
+- name: Ensure python3-paramiko is installed
+  ansible.builtin.package:
+    name: python3-paramiko
+    update_cache: yes
+    state: present
+
+- name: Update SSH config with key auto-added to agent
+  community.general.ssh_config:
+    user: {{ restic_backup__user }}
+    host: {{ restic_backup__host }}
+    hostname: {{ restic_backup__hostname }}
+    identity_file: {{ restic_backup__key_file_location }}
+    add_keys_to_agent: true
+    state: present
+
+- name: Ensure that dir exisits
+  ansible.builtin.file:
+    path: {{ restic_backup__backup_script_path }}
+    owner: {{ restic_backup__user }}
+    group: {{ restic_backup__group }}
+    state: directory
+    mode: '0750'
+
+- name: Copy backup script with owner and permissions
+  ansible.builtin.copy:
+    src: backup_script.sh
+    dest: "{{ restic_backup__backup_script_path }}/backup_script.sh"
+    owner: {{ restic_backup__user }}
+    group: {{ restic_backup__group }}
+    mode: '0750'

@@ -1,0 +1,3 @@
+restic_backup__user: root
+restic_backup__group: root
+restic_backup__key_file_location: /root/.ssh/backup_ssh_key
