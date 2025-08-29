@@ -1,3 +1,14 @@
-restic_backup__user: root
-restic_backup__group: root
-restic_backup__key_file_location: /root/.ssh/backup_ssh_key
+restic_backup__user: "root"
+restic_backup__group: "root"
+restic_backup__ssh_key_path: "/root/.ssh"
+
+restic_backup__stacks_dir: "/docker"
+
+restic_backup__retention_keep_last: 5
+
+restic_backup__logs_dir: "/var/log/docker-backup-logs"
+restic_backup__logs_keep: 10
+
+restic_backup__progress_fps: 1
+
+restic_backup__script_dir: "/opt/restic-backup"

@@ -9,10 +9,10 @@
 
 - name: Add SSH key to machine
   ansible.builtin.template:
-    src: backup_key.j2
-    dest: {{ restic_backup__key_file_location }}
-    owner: {{ restic_backup__user }}
-    group: {{ restic_backup__group }}
+    src: backup_ssh_key.j2
+    dest: "{{ restic_backup__ssh_key_path }}/backup_ssh_key"
+    owner: "{{ restic_backup__user }}"
+    group: "{{ restic_backup__group }}"
     mode: '0600'
     backup: yes
 
@@ -24,25 +24,34 @@
 
 - name: Update SSH config with key auto-added to agent
   community.general.ssh_config:
-    user: {{ restic_backup__user }}
-    host: {{ restic_backup__host }}
-    hostname: {{ restic_backup__hostname }}
-    identity_file: {{ restic_backup__key_file_location }}
+    user: "{{ restic_backup__user }}"
+    remote_user: "{{ restic_backup__ssh_user }}"
+    host: "{{ restic_backup__ssh_host_alias }}"
+    hostname: "{{ restic_backup__ssh_hostname }}"
+    identity_file: "{{ restic_backup__ssh_key_path }}/backup_ssh_key"
     add_keys_to_agent: true
     state: present
 
-- name: Ensure that dir exisits
+- name: "Ensure that {{ restic_backup__script_dir }} exists"
   ansible.builtin.file:
-    path: {{ restic_backup__backup_script_path }}
-    owner: {{ restic_backup__user }}
-    group: {{ restic_backup__group }}
+    path: "{{ restic_backup__script_dir }}"
+    owner: "{{ restic_backup__user }}"
+    group: "{{ restic_backup__group }}"
     state: directory
-    mode: '0750'
+    mode: '0700'
 
-- name: Copy backup script with owner and permissions
+- name: "Copy backup script with owner and permissions to {{ restic_backup__script_dir }}"
   ansible.builtin.copy:
     src: backup_script.sh
-    dest: "{{ restic_backup__backup_script_path }}/backup_script.sh"
-    owner: {{ restic_backup__user }}
-    group: {{ restic_backup__group }}
-    mode: '0750'
+    dest: "{{ restic_backup__script_dir }}/backup_script.sh"
+    owner: "{{ restic_backup__user }}"
+    group: "{{ restic_backup__group }}"
+    mode: '0700'
+
+- name: "Template a config.env file to {{ restic_backup__script_dir }}"
+  ansible.builtin.template:
+    src: config.env.j2
+    dest: "{{ restic_backup__script_dir }}/config.env"
+    owner: "{{ restic_backup__user }}"
+    group: "{{ restic_backup__group }}"
+    mode: '0600'

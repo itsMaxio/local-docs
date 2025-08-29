@@ -16,12 +16,12 @@ source "$CONFIG_FILE"
 export RESTIC_PASSWORD
 export RESTIC_PROGRESS_FPS
 
-LOG_FILES_DIRECTORY=$(realpath -s "$LOG_FILES_DIRECTORY")
-if [[ ! -d "$LOG_FILES_DIRECTORY" ]]; then
-  mkdir -p "$LOG_FILES_DIRECTORY"
+LOGS_DIR=$(realpath -s "$LOGS_DIR")
+if [[ ! -d "$LOGS_DIR" ]]; then
+  mkdir -p "$LOGS_DIR"
 fi
 
-LOG_FILE="$LOG_FILES_DIRECTORY/log-$(date +"%Y-%m-%d_%H_%M").txt"
+LOG_FILE="$LOGS_DIR/log-$(date +"%Y-%m-%d_%H_%M").txt"
 touch "$LOG_FILE"
 
 log() 
@@ -50,30 +50,30 @@ log()
   } >> "$LOG_FILE"
 }
 
-find "$LOG_FILES_DIRECTORY" -type f -name '*.txt' -printf '%T@ %p\0' |
+find "$LOGS_DIR" -type f -name '*.txt' -printf '%T@ %p\0' |
   sort -z -nr |
-  tail -z -n +$((LOG_FILES_KEEP + 1)) |
+  tail -z -n +$((LOGS_KEEP + 1)) |
   cut -z -d' ' -f2- |
   xargs -0 -r rm --
 
 ping_start()
 {
-  curl -fsS -m 30 "$HEALTHCHECKS_URL/start" >/dev/null || true
+  curl -fsS -m 30 "$HEALTHCHECK_URL/start" >/dev/null || true
 }
 
 ping_success()
 {
-  curl -fsS -m 30 "$HEALTHCHECKS_URL" >/dev/null || true
+  curl -fsS -m 30 "$HEALTHCHECK_URL" >/dev/null || true
 }
 
 ping_fail()
 {
-  curl -fsS -m 30 "$HEALTHCHECKS_URL/fail" >/dev/null || true
+  curl -fsS -m 30 "$HEALTHCHECK_URL/fail" >/dev/null || true
 }
 
 ping_log()
 {
-  curl -fsS -m 60 -H "Content-Type: text/plain" --data-binary @"$LOG_FILE" "$HEALTHCHECKS_URL/log" >/dev/null || true
+  curl -fsS -m 60 -H "Content-Type: text/plain" --data-binary @"$LOG_FILE" "$HEALTHCHECK_URL/log" >/dev/null || true
 }
 
 docker_compose_down()
@@ -115,7 +115,7 @@ restic_backup() {
 restic_forget() {
   log --newline "RESTIC: Starting retention policy"
   restic -r "$RESTIC_REPOSITORY" forget \
-        --keep-last "${RESTIC_KEEP_LAST}" \
+        --keep-last "${RESTIC_RETENTION_KEEP_LAST}" \
         --prune >>"$LOG_FILE" 2>&1 || true
   log --newline "RESTIC: Ending retention policy"
 }
@@ -146,7 +146,7 @@ fi
 services_to_restart=()
 
 log --newline "SCRIPT: Stopping services..."
-for service_dir in "$DOCKER_STACKS_LOCATION"/*/; do
+for service_dir in "$STACKS_DIR"/*/; do
   log --newline "SCRIPT: Checking: $service_dir"
 
   mapfile -t running < <(docker compose -f "$service_dir/compose.yaml" ps --services --filter "status=running" 2>/dev/null)
@@ -164,12 +164,12 @@ for service_dir in "$DOCKER_STACKS_LOCATION"/*/; do
   fi
 done
 
-how_many_services=$(ls "$DOCKER_STACKS_LOCATION" | wc -l)
+how_many_services=$(ls "$STACKS_DIR" | wc -l)
 
 log --newline "SCRIPT: There are $how_many_services services to backup, of which ${#services_to_restart[@]} are currently running:" "${services_to_restart[@]}"
 
-log --newline "SCRIPT: Backing up entire directory: $DOCKER_STACKS_LOCATION"
-if ! restic_backup "$DOCKER_STACKS_LOCATION"; then
+log --newline "SCRIPT: Backing up entire directory: $STACKS_DIR"
+if ! restic_backup "$STACKS_DIR"; then
   global_error=1
 fi
 
