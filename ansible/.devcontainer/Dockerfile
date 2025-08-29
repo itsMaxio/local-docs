@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM mcr.microsoft.com/devcontainers/python
 
 RUN apt-get update && apt-get install -y \
     openssh-client \
@@ -6,21 +6,13 @@ RUN apt-get update && apt-get install -y \
     sshpass \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade pip && \
-    pip install ansible
+RUN curl -fsSL https://get.docker.com | sh
 
-ARG USERNAME=vscode
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
+RUN pip install --upgrade \
+    pip \
+    pytz \
+    molecule-plugins[docker] \
+    docker \
+    ansible
 
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    && mkdir -p /home/$USERNAME/.ssh \
-    && chown -R $USER_UID:$USER_GID /home/$USERNAME/.ssh
-
-RUN mkdir -p /ansible \
-    && chown -R $USER_UID:$USER_GID /ansible \
-    && chmod 755 /ansible
-
-USER $USERNAME
 WORKDIR /ansible
