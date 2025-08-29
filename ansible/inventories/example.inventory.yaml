@@ -1,22 +1,22 @@
-all:
-  children:
-    local-test:
-      hosts:
-        debian-1:
-          ansible_host: 192.168.0.100
-          ansible_connection: ssh
-          ansible_become_method: su
-          ansible_user: maxio
-        debian-2:
-          ansible_host: 192.168.0.200
-          ansible_connection: ssh
-          ansible_become_method: su
-          ansible_user: maxio
+# all:
+#   children:
+#     local_test:
+#       hosts:
+#         debian-1:
+#           ansible_host: 192.168.0.100
+#           ansible_connection: ssh
+#           ansible_become_method: su
+#           ansible_user: maxio
+#         debian-2:
+#           ansible_host: 192.168.0.200
+#           ansible_connection: ssh
+#           ansible_become_method: su
+#           ansible_user: maxio
 
-    public:
-      hosts:
-        cloud:
-          ansible_host: 1.1.1.1
-          ansible_port: 2222
-          ansible_connection: ssh
-          ansible_user: debian
+#     public:
+#       hosts:
+#         cloud:
+#           ansible_host: 1.1.1.1
+#           ansible_port: 2222
+#           ansible_connection: ssh
+#           ansible_user: debian
