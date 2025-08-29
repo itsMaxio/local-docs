@@ -3,9 +3,21 @@
 
 - name: Update repositories cache and install Restic package
   ansible.builtin.apt:
-    name: restic
+    pkg:
+      - restic
+      - curl
+      - ssh
     update_cache: yes
     state: present
+
+- name: "Ensure {{ restic_backup__ssh_key_path }} exists"
+  ansible.builtin.file:
+    path: "{{ restic_backup__ssh_key_path }}"
+    state: directory
+    owner: "{{ restic_backup__user }}"
+    group: "{{ restic_backup__group }}"
+    mode: '0700'
+
 
 - name: Add SSH key to machine
   ansible.builtin.template:
@@ -14,7 +26,6 @@
     owner: "{{ restic_backup__user }}"
     group: "{{ restic_backup__group }}"
     mode: '0600'
-    backup: yes
 
 - name: Ensure python3-paramiko is installed
   ansible.builtin.package:
@@ -30,6 +41,17 @@
     hostname: "{{ restic_backup__ssh_hostname }}"
     identity_file: "{{ restic_backup__ssh_key_path }}/backup_ssh_key"
     add_keys_to_agent: true
+    state: present
+
+- name: Fetch host key
+  ansible.builtin.command: "ssh-keyscan -H -t ed25519 {{ restic_backup__ssh_hostname }}"
+  register: host_key
+
+- name: Add SFTP host key to known_hosts
+  ansible.builtin.known_hosts:
+    path: "{{ restic_backup__ssh_key_path }}/known_hosts"
+    name: "{{ restic_backup__ssh_hostname }}"
+    key: "{{ host_key.stdout }}"
     state: present
 
 - name: "Ensure that {{ restic_backup__script_dir }} exists"
