@@ -1,2 +1,5 @@
 collections/
 roles_external/
+
+host_vars/
+group_vars/

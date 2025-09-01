@@ -12,3 +12,9 @@ restic_backup__logs_keep: 10
 restic_backup__progress_fps: 1
 
 restic_backup__script_dir: "/opt/restic-backup"
+
+restic_backup__cron_minute: "0"
+restic_backup__cron_hour: "2"
+restic_backup__cron_day: "*"
+restic_backup__cron_month: "*"
+restic_backup__cron_weekday: "*"

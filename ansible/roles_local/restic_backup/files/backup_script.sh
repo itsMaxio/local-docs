@@ -130,6 +130,8 @@ LOCKFILE="/tmp/$(basename "$0").lock"
 exec 200>"$LOCKFILE"
 if ! flock -n 200; then
   log "ERROR: Backup is already working"
+  ping_fail
+  ping_log
   exit 1
 fi
 
@@ -138,8 +140,17 @@ global_error=0
 log --newline "SCRIPT: Backup starting..."
 ping_start
 
+if [ ! -d "$STACKS_DIR" ]; then
+  log "ERROR: Docker stacks location does not exist: $STACKS_DIR"
+  ping_fail
+  ping_log
+  exit 1
+fi
+
 if ! restic -r "$RESTIC_REPOSITORY" snapshots --quiet >/dev/null 2>&1; then
   log "ERROR: Repository does not exist: $RESTIC_REPOSITORY"
+  ping_fail
+  ping_log
   exit 1
 fi
 

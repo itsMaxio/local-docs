@@ -3,12 +3,14 @@ driver:
   name: docker
 platforms:
   - name: instance
-    image: "geerlingguy/docker-ubuntu2404-ansible"
+    image: "geerlingguy/docker-debian12-ansible"
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
     cgroupns_mode: host
     privileged: true
     pre_build_image: true
+    environment:
+      TZ: "Europe/Warsaw"
 provisioner:
   name: ansible
   playbooks:

@@ -1,15 +1,6 @@
 ---
 # - import_tasks: checks.yaml
 
-- name: Update repositories cache and install Restic package
-  ansible.builtin.apt:
-    pkg:
-      - restic
-      - curl
-      - ssh
-    update_cache: yes
-    state: present
-
 - name: "Ensure {{ restic_backup__ssh_key_path }} exists"
   ansible.builtin.file:
     path: "{{ restic_backup__ssh_key_path }}"
@@ -17,7 +8,6 @@
     owner: "{{ restic_backup__user }}"
     group: "{{ restic_backup__group }}"
     mode: '0700'
-
 
 - name: Add SSH key to machine
   ansible.builtin.template:
@@ -30,7 +20,7 @@
 - name: Ensure python3-paramiko is installed
   ansible.builtin.package:
     name: python3-paramiko
-    update_cache: yes
+    update_cache: true
     state: present
 
 - name: Update SSH config with key auto-added to agent
@@ -44,8 +34,15 @@
     state: present
 
 - name: Fetch host key
-  ansible.builtin.command: "ssh-keyscan -H -t ed25519 {{ restic_backup__ssh_hostname }}"
+  ansible.builtin.command:
+    argv:
+      - ssh-keyscan 
+      - -H 
+      - -t 
+      - ed25519 
+      - "{{ restic_backup__ssh_hostname }}"
   register: host_key
+  changed_when: false
 
 - name: Add SFTP host key to known_hosts
   ansible.builtin.known_hosts:
@@ -53,6 +50,27 @@
     name: "{{ restic_backup__ssh_hostname }}"
     key: "{{ host_key.stdout }}"
     state: present
+
+- name: Update repositories cache and install Restic package
+  ansible.builtin.apt:
+    pkg:
+      - restic
+      - curl
+    update_cache: true
+    state: present
+  tags: 
+    - always
+
+- name: Update Restic via command
+  ansible.builtin.command:
+    argv:
+      - /bin/restic
+      - self-update
+  register: restic_update
+  changed_when:
+    - "'restic is up to date' not in restic_update.stdout"
+  tags: 
+    - always
 
 - name: "Ensure that {{ restic_backup__script_dir }} exists"
   ansible.builtin.file:
@@ -77,3 +95,46 @@
     owner: "{{ restic_backup__user }}"
     group: "{{ restic_backup__group }}"
     mode: '0600'
+
+- name: Check if Restic repository exists
+  ansible.builtin.command:
+    argv:
+      - /bin/restic
+      - -r 
+      - "{{ restic_backup__repository_path }}"
+      - cat
+      - config
+  environment:
+    RESTIC_PASSWORD: "{{ restic_backup__repository_password }}"
+  register: restic_output
+  failed_when: false
+  tags: 
+    - never
+    - restic_init
+
+- name: Init repository if not exists
+  ansible.builtin.command:
+    argv:
+      - /bin/restic
+      - -r 
+      - "{{ restic_backup__repository_path }}"
+      - init
+  environment:
+    RESTIC_PASSWORD: "{{ restic_backup__repository_password }}"
+  tags: 
+    - never
+    - restic_init
+  when:
+      - restic_output.rc == 10
+
+- name: Create a cron job for backup script
+  ansible.builtin.cron:
+    name: restic_backup
+    state: present
+    minute: "{{ restic_backup__cron_minute }}"
+    hour: "{{ restic_backup__cron_hour }}"
+    day: "{{ restic_backup__cron_day }}"
+    weekday: "{{ restic_backup__cron_weekday }}"
+    month: "{{ restic_backup__cron_month }}"
+    user: "{{ restic_backup__user }}"
+    job: "{{ restic_backup__script_dir }}/backup_script.sh"
