@@ -76,28 +76,52 @@ ping_log()
   curl -fsS -m 60 -H "Content-Type: text/plain" --data-binary @"$LOG_FILE" "$HEALTHCHECK_URL/log" >/dev/null || true
 }
 
-docker_compose_down()
+docker_compose_stop()
 {
   local service_dir="$1"
-  log --newline "DOCKER_COMPOSE_DOWN: Stopping: $service_dir"
+  log --newline "DOCKER_COMPOSE_STOP: Stopping: $service_dir"
   (
     cd "$service_dir" || return 1
     if ! docker compose stop >>"$LOG_FILE" 2>&1; then
-      log "DOCKER_COMPOSE_DOWN_ERROR: Stopping: $service_dir"
+      log "DOCKER_COMPOSE_STOP_ERROR: Stopping: $service_dir"
       return 1
     fi
   )
 }
 
-docker_compose_up()
-{
+docker_compose_start() {
   local service_dir="$1"
-  log --newline "DOCKER_COMPOSE_UP: Starting: $service_dir"
+  log --newline "DOCKER_COMPOSE_START: Starting: $service_dir"
+
   (
     cd "$service_dir" || return 1
+
     if ! docker compose start >>"$LOG_FILE" 2>&1; then
-      log "DOCKER_COMPOSE_UP_ERROR: Problem starting: $service_dir"
-      return 1
+      log --newline "DOCKER_COMPOSE_START: One or more services are unhealthy"
+
+      check_health() {
+        local service="$1"
+        local status=$(docker inspect "$service" | jq -r '.[0].State.Health.Status // "nohealth"')
+        [[ "$status" == "healthy" || "$status" == "nohealth" ]]
+      }
+
+      mapfile -t services < <(docker compose ps --quiet)
+      local max_attempts=5
+
+      for service in "${services[@]}"; do
+        local attempt=1
+        until check_health "$service"; do
+          if (( attempt >= max_attempts )); then
+            log "DOCKER_COMPOSE_START_ERROR: $service is unhealthy after $attempt attempts"
+            return 1
+          fi
+          log "DOCKER_COMPOSE_START: $service attempt $attempt failed, retrying in $attempt sec..."
+          sleep "$attempt"
+          ((attempt++))
+        done
+      done
+
+      log --newline "DOCKER_COMPOSE_START: All services healthy in $service_dir"
     fi
   )
 }
@@ -165,7 +189,7 @@ for service_dir in "$STACKS_DIR"/*/; do
   if [[ ${#running[@]} -gt 0 && -n "${running[0]}" ]]; then
     log "SCRIPT: Found running services in $service_dir: \n\n${running[*]}"
     
-    if docker_compose_down "$service_dir"; then
+    if docker_compose_stop "$service_dir"; then
       services_to_restart+=("$service_dir")
     else
       global_error=1
@@ -186,7 +210,7 @@ fi
 
 log --newline "SCRIPT: Starting services..."
 for service_dir in "${services_to_restart[@]}"; do
-  if ! docker_compose_up "$service_dir"; then
+  if ! docker_compose_start "$service_dir"; then
     global_error=1
   fi
 done
